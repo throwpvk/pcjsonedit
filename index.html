@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON Editor - Podcast Maker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #f0fdf4;
+        color: #1e293b;
+        line-height: 1.4;
+        font-size: 17px;
+      }
+
+      .japanese {
+        font-family: "Noto Sans JP", sans-serif;
+      }
+
+      .vietnamese {
+        font-family: "Roboto", sans-serif;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+      }
+
+      .upload-section {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+      }
+
+      .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .file-input-wrapper input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 2px dashed #06b6d4;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+      }
+
+      .file-input-wrapper input[type="file"]:hover {
+        border-color: #0891b2;
+        background: #ecfeff;
+      }
+
+      .btn {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-right: 8px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(6, 182, 212, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(16, 185, 129, 0.4);
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .cards-container {
+        display: grid;
+        gap: 12px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        border-left: 4px solid #06b6d4;
+      }
+
+      .card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0f2fe;
+      }
+
+      .card-number {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: #0891b2;
+      }
+
+      .card-time {
+        font-size: 0.95rem;
+        color: #64748b;
+        font-family: monospace;
+      }
+
+      .field-group {
+        margin-bottom: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .field-group.japanese-field {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+      }
+
+      .field-group.vietnamese-field {
+        background: #dbeafe;
+        border: 1px solid #bfdbfe;
+      }
+
+      .field-group.furigana-field {
+        background: #e0f2fe;
+        border: 1px solid #bae6fd;
+      }
+
+      .field-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #334155;
+        font-size: 1rem;
+      }
+
+      .input-wrapper {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .field-input {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: all 0.2s ease;
+      }
+
+      .field-input:focus {
+        outline: none;
+        border-color: #06b6d4;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+      }
+
+      .copy-btn {
+        padding: 8px 12px;
+        background: #64748b;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+      }
+
+      .copy-btn:hover {
+        background: #475569;
+      }
+
+      .copy-btn:active {
+        background: #10b981;
+      }
+
+      .furigana-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        background: #dbeafe;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid #93c5fd;
+      }
+
+      .furigana-table th {
+        background: #3b82f6;
+        color: white;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .furigana-table td {
+        padding: 6px 10px;
+        border-bottom: 1px solid #cbd5e1;
+      }
+
+      .furigana-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .furigana-input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 15px;
+      }
+
+      .furigana-input:focus {
+        outline: none;
+        border-color: #06b6d4;
+      }
+
+      .ruby-display {
+        font-size: 18px;
+        line-height: 2.5;
+        padding: 10px;
+        background: #f0f9ff;
+        border-radius: 6px;
+        border: 1px solid #bae6fd;
+      }
+
+      .ruby-display ruby {
+        margin: 0 2px;
+      }
+
+      .ruby-display rt {
+        font-size: 0.6em;
+        color: #0891b2;
+      }
+
+      .furigana-controls {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn-edit {
+        padding: 6px 12px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-edit:hover {
+        background: #2563eb;
+      }
+
+      .btn-save {
+        padding: 6px 12px;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-save:hover {
+        background: #059669;
+      }
+
+      .vocabulary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        background: #fef9c3;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid #fde047;
+      }
+
+      .vocabulary-table th {
+        background: #facc15;
+        color: #713f12;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .vocabulary-table td {
+        padding: 6px 10px;
+        border-bottom: 1px solid #cbd5e1;
+      }
+
+      .vocabulary-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .vocabulary-input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 15px;
+      }
+
+      .vocabulary-input:focus {
+        outline: none;
+        border-color: #f59e0b;
+      }
+
+      .notes-toggle {
+        margin-top: 12px;
+        padding: 8px 15px;
+        background: #dcfce7;
+        border: 2px solid #86efac;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.2s ease;
+      }
+
+      .notes-toggle:hover {
+        background: #bbf7d0;
+      }
+
+      .notes-section {
+        margin-top: 10px;
+        padding: 12px;
+        background: #ecfdf5;
+        border-radius: 6px;
+        border: 2px solid #a7f3d0;
+      }
+
+      .notes-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #0f766e;
+      }
+
+      .note-item {
+        background: #faf5ff;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        border-left: 4px solid #a78bfa;
+      }
+
+      .note-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .note-field {
+        margin-bottom: 8px;
+      }
+
+      .note-field:last-child {
+        margin-bottom: 0;
+      }
+
+      .note-field-label {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #475569;
+        margin-bottom: 3px;
+      }
+
+      .note-field-input {
+        width: 100%;
+        padding: 7px 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 15px;
+      }
+
+      .note-field-textarea {
+        width: 100%;
+        padding: 7px 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 15px;
+        min-height: 55px;
+        resize: vertical;
+      }
+
+      .file-info {
+        background: #cffafe;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+      }
+
+      .file-info strong {
+        color: #0891b2;
+      }
+
+      .sticky-controls {
+        position: sticky;
+        top: 10px;
+        background: white;
+        padding: 12px 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 12px;
+        z-index: 100;
+        border-left: 4px solid #10b981;
+      }
+
+      .search-container {
+        position: relative;
+        margin-bottom: 12px;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #06b6d4;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.2s ease;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: #0891b2;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+      }
+
+      .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 5px;
+        background: white;
+        border: 2px solid #06b6d4;
+        border-radius: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+      }
+
+      .search-result-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0f2fe;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .search-result-item:last-child {
+        border-bottom: none;
+      }
+
+      .search-result-item:hover {
+        background: #e0f2fe;
+      }
+
+      .search-result-number {
+        display: inline-block;
+        background: #06b6d4;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 10px;
+      }
+
+      .search-result-text {
+        font-size: 15px;
+        color: #1e293b;
+      }
+
+      .search-no-results {
+        padding: 20px;
+        text-align: center;
+        color: #64748b;
+        font-style: italic;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #64748b;
+      }
+
+      .empty-state-icon {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 30px;
+        color: #06b6d4;
+        font-size: 1.15rem;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes highlight {
+        0%,
+        100% {
+          background: white;
+        }
+        50% {
+          background: #fef3c7;
+          transform: scale(1.02);
+        }
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(6, 182, 212, 0.3);
+        border-radius: 50%;
+        border-top-color: #06b6d4;
+        animation: spin 0.6s linear infinite;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useCallback, useMemo } = React;
+
+      // Danh sách surface cần cập nhật reading
+      const READING_CORRECTIONS = [
+        { surface: "日本", reading: "にほん" },
+        { surface: "他", reading: "ほか" },
+        { surface: "私", reading: "わたし" },
+      ];
+
+      // Hàm chuyển đổi giây sang định dạng hh:mm:ss,mmm
+      const formatTime = (seconds) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        const milliseconds = Math.floor((seconds % 1) * 1000);
+
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0"
+        )}:${String(secs).padStart(2, "0")},${String(milliseconds).padStart(
+          3,
+          "0"
+        )}`;
+      };
+
+      // Component cho từng card
+      const SentenceCard = ({ sentence, onUpdate }) => {
+        const [showNotes, setShowNotes] = useState(false);
+        const [editingFurigana, setEditingFurigana] = useState(false);
+
+        const handleCopy = (text) => {
+          navigator.clipboard.writeText(text).then(() => {
+            // Visual feedback
+            console.log("Copied:", text);
+          });
+        };
+
+        const updateField = (field, value) => {
+          onUpdate({ ...sentence, [field]: value });
+        };
+
+        const updateFurigana = (index, field, value) => {
+          const newFurigana = [...sentence.furigana];
+          newFurigana[index] = { ...newFurigana[index], [field]: value };
+          onUpdate({ ...sentence, furigana: newFurigana });
+        };
+
+        // Render ruby text từ furigana
+        const renderRubyText = () => {
+          if (!sentence.furigana || sentence.furigana.length === 0) {
+            return sentence.raw;
+          }
+
+          const raw = sentence.raw;
+          const result = [];
+          let lastIndex = 0;
+
+          // Tạo map để tìm kiếm nhanh hơn
+          const furiganaMap = {};
+          sentence.furigana.forEach((item) => {
+            if (item.surface && item.reading) {
+              furiganaMap[item.surface] = item.reading;
+            }
+          });
+
+          // Duyệt qua từng ký tự trong raw
+          for (let i = 0; i < raw.length; i++) {
+            let matched = false;
+
+            // Thử match các surface từ dài đến ngắn
+            const surfaces = Object.keys(furiganaMap).sort(
+              (a, b) => b.length - a.length
+            );
+
+            for (const surface of surfaces) {
+              if (raw.substring(i, i + surface.length) === surface) {
+                // Thêm phần text trước match (nếu có)
+                if (i > lastIndex) {
+                  result.push(raw.substring(lastIndex, i));
+                }
+
+                // Thêm ruby tag
+                result.push(
+                  <ruby key={`ruby-${i}`}>
+                    {surface}
+                    <rt>{furiganaMap[surface]}</rt>
+                  </ruby>
+                );
+
+                lastIndex = i + surface.length;
+                i = lastIndex - 1; // -1 vì loop sẽ +1
+                matched = true;
+                break;
+              }
+            }
+          }
+
+          // Thêm phần còn lại của chuỗi
+          if (lastIndex < raw.length) {
+            result.push(raw.substring(lastIndex));
+          }
+
+          return result.length > 0 ? result : raw;
+        };
+
+        const updateVocabularyNote = (index, field, value) => {
+          const newNotes = [...sentence.vocabulary_notes];
+          newNotes[index] = { ...newNotes[index], [field]: value };
+          onUpdate({ ...sentence, vocabulary_notes: newNotes });
+        };
+
+        const updateGrammarNote = (index, field, value) => {
+          const newNotes = [...sentence.grammar_notes];
+          newNotes[index] = { ...newNotes[index], [field]: value };
+          onUpdate({ ...sentence, grammar_notes: newNotes });
+        };
+
+        return (
+          <div className="card">
+            <div className="card-header">
+              <div className="card-number">#{sentence.id}</div>
+              <div className="card-time">
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "#94a3b8",
+                    marginRight: "6px",
+                  }}
+                >
+                  ⏱️
+                </span>
+                {formatTime(sentence.start)} - {formatTime(sentence.end)}
+              </div>
+            </div>
+
+            <div className="field-group japanese-field">
+              <label className="field-label">Câu tiếng Nhật</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  className="field-input japanese"
+                  value={sentence.raw}
+                  onChange={(e) => updateField("raw", e.target.value)}
+                />
+                <button
+                  className="copy-btn"
+                  onClick={() => handleCopy(sentence.raw)}
+                >
+                  Sao chép
+                </button>
+              </div>
+            </div>
+
+            <div className="field-group vietnamese-field">
+              <label className="field-label">Dịch tiếng Việt</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  className="field-input vietnamese"
+                  value={sentence.vi}
+                  onChange={(e) => updateField("vi", e.target.value)}
+                />
+                <button
+                  className="copy-btn"
+                  onClick={() => handleCopy(sentence.vi)}
+                >
+                  Sao chép
+                </button>
+              </div>
+            </div>
+
+            {sentence.furigana && sentence.furigana.length > 0 && (
+              <div className="field-group furigana-field">
+                <label className="field-label">Furigana</label>
+
+                {!editingFurigana ? (
+                  <>
+                    <div className="ruby-display japanese">
+                      {renderRubyText()}
+                    </div>
+                    <div className="furigana-controls">
+                      <button
+                        className="btn-edit"
+                        onClick={() => setEditingFurigana(true)}
+                      >
+                        ✏️ Chỉnh sửa
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="ruby-display japanese">
+                      {renderRubyText()}
+                    </div>
+                    <table className="furigana-table">
+                      <thead>
+                        <tr>
+                          <th>Từ Kanji</th>
+                          <th>Cách đọc</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sentence.furigana.map((item, index) => (
+                          <tr key={index}>
+                            <td>
+                              <input
+                                type="text"
+                                className="furigana-input japanese"
+                                value={item.surface}
+                                onChange={(e) =>
+                                  updateFurigana(
+                                    index,
+                                    "surface",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="furigana-input japanese"
+                                value={item.reading}
+                                onChange={(e) =>
+                                  updateFurigana(
+                                    index,
+                                    "reading",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="furigana-controls">
+                      <button
+                        className="btn-save"
+                        onClick={() => setEditingFurigana(false)}
+                      >
+                        ✓ Lưu
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <button
+              className="notes-toggle"
+              onClick={() => setShowNotes(!showNotes)}
+            >
+              {showNotes ? "▼" : "▶"} {showNotes ? "Ẩn Notes" : "Xem Notes"}
+            </button>
+
+            {showNotes && (
+              <div className="notes-section">
+                {sentence.vocabulary_notes &&
+                  sentence.vocabulary_notes.length > 0 && (
+                    <>
+                      <div className="notes-title">Từ vựng</div>
+                      <table className="vocabulary-table">
+                        <thead>
+                          <tr>
+                            <th>Từ</th>
+                            <th>Cách đọc</th>
+                            <th>Nghĩa</th>
+                            <th>JLPT</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sentence.vocabulary_notes.map((note, index) => (
+                            <tr key={index}>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="vocabulary-input japanese"
+                                  value={note.word || ""}
+                                  onChange={(e) =>
+                                    updateVocabularyNote(
+                                      index,
+                                      "word",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="vocabulary-input japanese"
+                                  value={note.reading || ""}
+                                  onChange={(e) =>
+                                    updateVocabularyNote(
+                                      index,
+                                      "reading",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="vocabulary-input vietnamese"
+                                  value={note.meaning || ""}
+                                  onChange={(e) =>
+                                    updateVocabularyNote(
+                                      index,
+                                      "meaning",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="vocabulary-input"
+                                  value={note.jlpt_level || ""}
+                                  onChange={(e) =>
+                                    updateVocabularyNote(
+                                      index,
+                                      "jlpt_level",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+
+                {sentence.grammar_notes &&
+                  sentence.grammar_notes.length > 0 && (
+                    <>
+                      <div
+                        className="notes-title"
+                        style={{ marginTop: "20px" }}
+                      >
+                        Ngữ pháp
+                      </div>
+                      {sentence.grammar_notes.map((note, index) => (
+                        <div key={index} className="note-item">
+                          <div className="note-field">
+                            <div className="note-field-label">Mẫu câu</div>
+                            <input
+                              type="text"
+                              className="note-field-input japanese"
+                              value={note.point || ""}
+                              onChange={(e) =>
+                                updateGrammarNote(
+                                  index,
+                                  "point",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="note-field">
+                            <div className="note-field-label">Giải thích</div>
+                            <textarea
+                              className="note-field-textarea vietnamese"
+                              value={note.explanation || ""}
+                              onChange={(e) =>
+                                updateGrammarNote(
+                                  index,
+                                  "explanation",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="note-field">
+                            <div className="note-field-label">Ví dụ</div>
+                            <textarea
+                              className="note-field-textarea japanese"
+                              value={note.example || ""}
+                              onChange={(e) =>
+                                updateGrammarNote(
+                                  index,
+                                  "example",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="note-field">
+                            <div className="note-field-label">Cấp độ JLPT</div>
+                            <input
+                              type="text"
+                              className="note-field-input"
+                              value={note.jlpt_level || ""}
+                              onChange={(e) =>
+                                updateGrammarNote(
+                                  index,
+                                  "jlpt_level",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // Component chính
+      const App = () => {
+        const [file, setFile] = useState(null);
+        const [jsonData, setJsonData] = useState(null);
+        const [sentences, setSentences] = useState([]);
+        const [isLoading, setIsLoading] = useState(false);
+        const [searchTerm, setSearchTerm] = useState("");
+        const [searchResults, setSearchResults] = useState([]);
+        const [showResults, setShowResults] = useState(false);
+
+        const handleFileChange = (event) => {
+          const selectedFile = event.target.files[0];
+          if (selectedFile && selectedFile.type === "application/json") {
+            setFile(selectedFile);
+          } else {
+            alert("Vui lòng chọn file JSON hợp lệ");
+            event.target.value = "";
+          }
+        };
+
+        const handleDisplay = useCallback(() => {
+          if (!file) {
+            alert("Vui lòng chọn file trước");
+            return;
+          }
+
+          setIsLoading(true);
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              setJsonData(data);
+              setSentences(data.sentences || []);
+              setIsLoading(false);
+            } catch (error) {
+              alert("Lỗi đọc file JSON: " + error.message);
+              setIsLoading(false);
+            }
+          };
+
+          reader.onerror = () => {
+            alert("Lỗi đọc file");
+            setIsLoading(false);
+          };
+
+          reader.readAsText(file);
+        }, [file]);
+
+        const updateSentence = useCallback((updatedSentence) => {
+          setSentences((prev) =>
+            prev.map((s) => (s.id === updatedSentence.id ? updatedSentence : s))
+          );
+        }, []);
+
+        const applyReadingCorrections = (data) => {
+          const correctedData = JSON.parse(JSON.stringify(data)); // Deep clone
+
+          correctedData.sentences.forEach((sentence) => {
+            if (sentence.furigana && Array.isArray(sentence.furigana)) {
+              sentence.furigana.forEach((item) => {
+                const correction = READING_CORRECTIONS.find(
+                  (c) => c.surface === item.surface
+                );
+                if (correction) {
+                  item.reading = correction.reading;
+                }
+              });
+            }
+          });
+
+          return correctedData;
+        };
+
+        const handleSave = useCallback(() => {
+          if (!jsonData) return;
+
+          const updatedData = {
+            ...jsonData,
+            sentences: sentences,
+          };
+
+          // Áp dụng các sửa đổi reading
+          const finalData = applyReadingCorrections(updatedData);
+
+          // Tạo file JSON
+          const blob = new Blob([JSON.stringify(finalData, null, 2)], {
+            type: "application/json",
+          });
+
+          // Tạo link download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = file.name.replace(".json", "_edited.json");
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          alert("Đã lưu file thành công!");
+        }, [jsonData, sentences, file]);
+
+        // Xử lý tìm kiếm
+        const handleSearch = useCallback(
+          (value) => {
+            setSearchTerm(value);
+
+            if (!value.trim()) {
+              setSearchResults([]);
+              setShowResults(false);
+              return;
+            }
+
+            const results = sentences.filter(
+              (sentence) =>
+                sentence.raw &&
+                sentence.raw.toLowerCase().includes(value.toLowerCase())
+            );
+
+            setSearchResults(results);
+            setShowResults(true);
+          },
+          [sentences]
+        );
+
+        // Scroll đến card
+        const scrollToSentence = useCallback((sentenceId) => {
+          const element = document.getElementById(`sentence-${sentenceId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.style.animation = "highlight 1s ease";
+            setTimeout(() => {
+              element.style.animation = "";
+            }, 1000);
+          }
+          setShowResults(false);
+        }, []);
+
+        return (
+          <div className="container">
+            <div className="header">
+              <h1>📝 JSON Editor - Podcast Maker</h1>
+              <p>Công cụ chỉnh sửa file JSON cho podcast học tiếng Nhật</p>
+            </div>
+
+            <div className="upload-section">
+              <h2 style={{ marginBottom: "20px" }}>📁 Tải lên file JSON</h2>
+              <div className="file-input-wrapper">
+                <input type="file" accept=".json" onChange={handleFileChange} />
+              </div>
+              {file && (
+                <div className="file-info">
+                  <strong>File đã chọn:</strong> {file.name} (
+                  {(file.size / 1024).toFixed(2)} KB)
+                </div>
+              )}
+              <button
+                className="btn btn-primary"
+                onClick={handleDisplay}
+                disabled={!file || isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="spinner"></span>Đang tải...
+                  </>
+                ) : (
+                  "🚀 Hiển thị"
+                )}
+              </button>
+            </div>
+
+            {isLoading && (
+              <div className="loading">
+                <span className="spinner"></span>
+                Đang xử lý dữ liệu...
+              </div>
+            )}
+
+            {!isLoading && sentences.length > 0 && (
+              <>
+                <div className="sticky-controls">
+                  <div className="search-container">
+                    <input
+                      type="text"
+                      className="search-input japanese"
+                      placeholder="🔍 Tìm kiếm câu tiếng Nhật..."
+                      value={searchTerm}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      onFocus={() => searchTerm && setShowResults(true)}
+                    />
+                    {showResults && (
+                      <div className="search-results">
+                        {searchResults.length > 0 ? (
+                          searchResults.map((sentence) => (
+                            <div
+                              key={sentence.id}
+                              className="search-result-item"
+                              onClick={() => scrollToSentence(sentence.id)}
+                            >
+                              <span className="search-result-number">
+                                #{sentence.id}
+                              </span>
+                              <span className="search-result-text japanese">
+                                {sentence.raw}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="search-no-results">
+                            Không tìm thấy kết quả phù hợp
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <strong>Tổng số câu:</strong> {sentences.length} |
+                      <strong> File:</strong> {jsonData?.meta?.title || "N/A"}
+                    </div>
+                    <button className="btn btn-success" onClick={handleSave}>
+                      💾 Lưu file
+                    </button>
+                  </div>
+                </div>
+
+                <div className="cards-container">
+                  {sentences.map((sentence) => (
+                    <div key={sentence.id} id={`sentence-${sentence.id}`}>
+                      <SentenceCard
+                        sentence={sentence}
+                        onUpdate={updateSentence}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {!isLoading && !sentences.length && !file && (
+              <div className="empty-state">
+                <div className="empty-state-icon">📄</div>
+                <h2>Chưa có dữ liệu</h2>
+                <p>Vui lòng tải lên file JSON để bắt đầu chỉnh sửa</p>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // Render app
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
