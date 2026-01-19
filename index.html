@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -27,8 +27,15 @@
       }
 
       body {
-        font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
-          Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-family:
+          "Roboto",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          sans-serif;
         background: #f0fdf4;
         color: #1e293b;
         line-height: 1.4;
@@ -186,8 +193,8 @@
       }
 
       .field-group.furigana-field {
-        background: #e0f2fe;
-        border: 1px solid #bae6fd;
+        background: #fce7f3;
+        border: 1px solid #fbcfe8;
       }
 
       .field-label {
@@ -243,14 +250,14 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 8px;
-        background: #dbeafe;
+        background: #fce7f3;
         border-radius: 6px;
         overflow: hidden;
-        border: 2px solid #93c5fd;
+        border: 2px solid #fbcfe8;
       }
 
       .furigana-table th {
-        background: #3b82f6;
+        background: #ec4899;
         color: white;
         padding: 8px 10px;
         text-align: left;
@@ -284,9 +291,9 @@
         font-size: 18px;
         line-height: 2.5;
         padding: 10px;
-        background: #f0f9ff;
+        background: #fdf2f8;
         border-radius: 6px;
-        border: 1px solid #bae6fd;
+        border: 1px solid #fbcfe8;
       }
 
       .ruby-display ruby {
@@ -731,10 +738,10 @@
 
         return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
           2,
-          "0"
+          "0",
         )}:${String(secs).padStart(2, "0")},${String(milliseconds).padStart(
           3,
-          "0"
+          "0",
         )}`;
       };
 
@@ -784,7 +791,7 @@
 
             // Thử match các surface từ dài đến ngắn
             const surfaces = Object.keys(furiganaMap).sort(
-              (a, b) => b.length - a.length
+              (a, b) => b.length - a.length,
             );
 
             for (const surface of surfaces) {
@@ -799,7 +806,7 @@
                   <ruby key={`ruby-${i}`}>
                     {surface}
                     <rt>{furiganaMap[surface]}</rt>
-                  </ruby>
+                  </ruby>,
                 );
 
                 lastIndex = i + surface.length;
@@ -926,7 +933,7 @@
                                   updateFurigana(
                                     index,
                                     "surface",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -940,7 +947,7 @@
                                   updateFurigana(
                                     index,
                                     "reading",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -996,7 +1003,7 @@
                                     updateVocabularyNote(
                                       index,
                                       "word",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -1010,7 +1017,7 @@
                                     updateVocabularyNote(
                                       index,
                                       "reading",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -1024,7 +1031,7 @@
                                     updateVocabularyNote(
                                       index,
                                       "meaning",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -1038,7 +1045,7 @@
                                     updateVocabularyNote(
                                       index,
                                       "jlpt_level",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -1071,7 +1078,7 @@
                                 updateGrammarNote(
                                   index,
                                   "point",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -1085,7 +1092,7 @@
                                 updateGrammarNote(
                                   index,
                                   "explanation",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -1099,7 +1106,7 @@
                                 updateGrammarNote(
                                   index,
                                   "example",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -1114,7 +1121,7 @@
                                 updateGrammarNote(
                                   index,
                                   "jlpt_level",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -1164,7 +1171,7 @@
             if (currentDraftId) {
               localStorage.setItem(
                 `draft_scroll_${currentDraftId}`,
-                window.scrollY
+                window.scrollY,
               );
             }
           };
@@ -1180,7 +1187,7 @@
               const parsedDrafts = JSON.parse(savedDrafts);
               // Sắp xếp theo thời gian mới nhất
               parsedDrafts.sort(
-                (a, b) => new Date(b.lastModified) - new Date(a.lastModified)
+                (a, b) => new Date(b.lastModified) - new Date(a.lastModified),
               );
               setDrafts(parsedDrafts);
             }
@@ -1206,7 +1213,7 @@
 
             // Cập nhật hoặc thêm mới
             const existingIndex = draftsArray.findIndex(
-              (d) => d.id === draftId
+              (d) => d.id === draftId,
             );
             if (existingIndex >= 0) {
               draftsArray[existingIndex] = draft;
@@ -1241,7 +1248,7 @@
             // Scroll đến vị trí cuối cùng
             setTimeout(() => {
               const savedScroll = localStorage.getItem(
-                `draft_scroll_${draft.id}`
+                `draft_scroll_${draft.id}`,
               );
               if (savedScroll) {
                 window.scrollTo(0, parseInt(savedScroll));
@@ -1263,7 +1270,7 @@
                 draftsArray = draftsArray.filter((d) => d.id !== draftId);
                 localStorage.setItem(
                   "podcast_drafts",
-                  JSON.stringify(draftsArray)
+                  JSON.stringify(draftsArray),
                 );
                 setDrafts(draftsArray);
                 localStorage.removeItem(`draft_scroll_${draftId}`);
@@ -1331,7 +1338,9 @@
 
         const updateSentence = useCallback((updatedSentence) => {
           setSentences((prev) =>
-            prev.map((s) => (s.id === updatedSentence.id ? updatedSentence : s))
+            prev.map((s) =>
+              s.id === updatedSentence.id ? updatedSentence : s,
+            ),
           );
         }, []);
 
@@ -1342,7 +1351,7 @@
             if (sentence.furigana && Array.isArray(sentence.furigana)) {
               sentence.furigana.forEach((item) => {
                 const correction = READING_CORRECTIONS.find(
-                  (c) => c.surface === item.surface
+                  (c) => c.surface === item.surface,
                 );
                 if (correction) {
                   item.reading = correction.reading;
@@ -1397,13 +1406,13 @@
             const results = sentences.filter(
               (sentence) =>
                 sentence.raw &&
-                sentence.raw.toLowerCase().includes(value.toLowerCase())
+                sentence.raw.toLowerCase().includes(value.toLowerCase()),
             );
 
             setSearchResults(results);
             setShowResults(true);
           },
-          [sentences]
+          [sentences],
         );
 
         // Scroll đến card
