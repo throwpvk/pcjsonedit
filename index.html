@@ -1374,8 +1374,12 @@
           // Áp dụng các sửa đổi reading
           const finalData = applyReadingCorrections(updatedData);
 
-          // Tạo file JSON
-          const blob = new Blob([JSON.stringify(finalData, null, 2)], {
+          // Tạo file JSON với Windows CRLF line endings
+          const jsonString = JSON.stringify(finalData, null, 2).replace(
+            /\n/g,
+            "\r\n",
+          );
+          const blob = new Blob([jsonString], {
             type: "application/json",
           });
 
