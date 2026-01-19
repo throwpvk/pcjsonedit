@@ -290,12 +290,30 @@
       }
 
       .ruby-display ruby {
-        margin: 0 2px;
+        margin: 0 4px;
+        border-bottom: 2px solid #a5f3fc;
+      }
+
+      .ruby-display ruby:nth-child(4n + 1) {
+        border-bottom-color: #a5f3fc;
+      }
+
+      .ruby-display ruby:nth-child(4n + 2) {
+        border-bottom-color: #fde68a;
+      }
+
+      .ruby-display ruby:nth-child(4n + 3) {
+        border-bottom-color: #d9f99d;
+      }
+
+      .ruby-display ruby:nth-child(4n + 4) {
+        border-bottom-color: #fecaca;
       }
 
       .ruby-display rt {
-        font-size: 0.6em;
+        font-size: 0.75em;
         color: #0891b2;
+        font-weight: 500;
       }
 
       .furigana-controls {
@@ -469,13 +487,14 @@
       .sticky-controls {
         position: sticky;
         top: 10px;
-        background: white;
+        background: #f0fdf4;
         padding: 12px 15px;
         border-radius: 8px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 12px;
         z-index: 100;
         border-left: 4px solid #10b981;
+        border: 2px solid #bbf7d0;
       }
 
       .search-container {
@@ -549,6 +568,98 @@
         text-align: center;
         color: #64748b;
         font-style: italic;
+      }
+
+      .drafts-section {
+        background: #fff7ed;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 2px solid #fed7aa;
+      }
+
+      .drafts-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #ea580c;
+      }
+
+      .draft-item {
+        background: white;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-left: 4px solid #fb923c;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .draft-item:hover {
+        background: #fef3c7;
+        transform: translateX(3px);
+      }
+
+      .draft-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .draft-info {
+        flex: 1;
+      }
+
+      .draft-name {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 3px;
+      }
+
+      .draft-meta {
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+
+      .draft-delete {
+        padding: 6px 10px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .draft-delete:hover {
+        background: #dc2626;
+      }
+
+      .auto-save-indicator {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        font-size: 14px;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .empty-state {
@@ -1027,6 +1138,157 @@
         const [searchTerm, setSearchTerm] = useState("");
         const [searchResults, setSearchResults] = useState([]);
         const [showResults, setShowResults] = useState(false);
+        const [drafts, setDrafts] = useState([]);
+        const [showAutoSave, setShowAutoSave] = useState(false);
+        const [currentDraftId, setCurrentDraftId] = useState(null);
+
+        // Load drafts khi component mount
+        React.useEffect(() => {
+          loadDrafts();
+        }, []);
+
+        // Auto save khi sentences thay đổi
+        React.useEffect(() => {
+          if (sentences.length > 0 && jsonData) {
+            const saveTimer = setTimeout(() => {
+              saveDraft();
+            }, 2000); // Auto save sau 2 giây không có thay đổi
+
+            return () => clearTimeout(saveTimer);
+          }
+        }, [sentences, jsonData]);
+
+        // Lưu scroll position
+        React.useEffect(() => {
+          const handleScroll = () => {
+            if (currentDraftId) {
+              localStorage.setItem(
+                `draft_scroll_${currentDraftId}`,
+                window.scrollY
+              );
+            }
+          };
+
+          window.addEventListener("scroll", handleScroll);
+          return () => window.removeEventListener("scroll", handleScroll);
+        }, [currentDraftId]);
+
+        const loadDrafts = () => {
+          try {
+            const savedDrafts = localStorage.getItem("podcast_drafts");
+            if (savedDrafts) {
+              const parsedDrafts = JSON.parse(savedDrafts);
+              // Sắp xếp theo thời gian mới nhất
+              parsedDrafts.sort(
+                (a, b) => new Date(b.lastModified) - new Date(a.lastModified)
+              );
+              setDrafts(parsedDrafts);
+            }
+          } catch (error) {
+            console.error("Error loading drafts:", error);
+          }
+        };
+
+        const saveDraft = () => {
+          try {
+            const draftId = currentDraftId || Date.now().toString();
+            const draft = {
+              id: draftId,
+              name: jsonData?.meta?.title || file?.name || "Untitled",
+              jsonData: jsonData,
+              sentences: sentences,
+              lastModified: new Date().toISOString(),
+              scrollPosition: window.scrollY,
+            };
+
+            const savedDrafts = localStorage.getItem("podcast_drafts");
+            let draftsArray = savedDrafts ? JSON.parse(savedDrafts) : [];
+
+            // Cập nhật hoặc thêm mới
+            const existingIndex = draftsArray.findIndex(
+              (d) => d.id === draftId
+            );
+            if (existingIndex >= 0) {
+              draftsArray[existingIndex] = draft;
+            } else {
+              draftsArray.push(draft);
+            }
+
+            // Giới hạn 10 bản nháp
+            if (draftsArray.length > 10) {
+              draftsArray = draftsArray.slice(0, 10);
+            }
+
+            localStorage.setItem("podcast_drafts", JSON.stringify(draftsArray));
+            setCurrentDraftId(draftId);
+            setDrafts(draftsArray);
+
+            // Hiển thị indicator
+            setShowAutoSave(true);
+            setTimeout(() => setShowAutoSave(false), 2000);
+          } catch (error) {
+            console.error("Error saving draft:", error);
+          }
+        };
+
+        const loadDraft = (draft) => {
+          try {
+            setJsonData(draft.jsonData);
+            setSentences(draft.sentences);
+            setCurrentDraftId(draft.id);
+            setFile({ name: draft.name });
+
+            // Scroll đến vị trí cuối cùng
+            setTimeout(() => {
+              const savedScroll = localStorage.getItem(
+                `draft_scroll_${draft.id}`
+              );
+              if (savedScroll) {
+                window.scrollTo(0, parseInt(savedScroll));
+              }
+            }, 100);
+          } catch (error) {
+            console.error("Error loading draft:", error);
+            alert("Lỗi khi tải bản nháp");
+          }
+        };
+
+        const deleteDraft = (draftId, e) => {
+          e.stopPropagation();
+          if (confirm("Bạn có chắc muốn xóa bản nháp này?")) {
+            try {
+              const savedDrafts = localStorage.getItem("podcast_drafts");
+              if (savedDrafts) {
+                let draftsArray = JSON.parse(savedDrafts);
+                draftsArray = draftsArray.filter((d) => d.id !== draftId);
+                localStorage.setItem(
+                  "podcast_drafts",
+                  JSON.stringify(draftsArray)
+                );
+                setDrafts(draftsArray);
+                localStorage.removeItem(`draft_scroll_${draftId}`);
+
+                if (currentDraftId === draftId) {
+                  setCurrentDraftId(null);
+                }
+              }
+            } catch (error) {
+              console.error("Error deleting draft:", error);
+            }
+          }
+        };
+
+        const formatDate = (isoString) => {
+          const date = new Date(isoString);
+          const now = new Date();
+          const diff = now - date;
+
+          if (diff < 60000) return "Vừa xong";
+          if (diff < 3600000) return `${Math.floor(diff / 60000)} phút trước`;
+          if (diff < 86400000) return `${Math.floor(diff / 3600000)} giờ trước`;
+
+          return date.toLocaleString("vi-VN");
+        };
 
         const handleFileChange = (event) => {
           const selectedFile = event.target.files[0];
@@ -1171,8 +1433,8 @@
               </div>
               {file && (
                 <div className="file-info">
-                  <strong>File đã chọn:</strong> {file.name} (
-                  {(file.size / 1024).toFixed(2)} KB)
+                  <strong>File đã chọn:</strong> {file.name}
+                  {file.size && ` (${(file.size / 1024).toFixed(2)} KB)`}
                 </div>
               )}
               <button
@@ -1189,6 +1451,33 @@
                 )}
               </button>
             </div>
+
+            {drafts.length > 0 && sentences.length === 0 && (
+              <div className="drafts-section">
+                <div className="drafts-title">📝 Bản nháp đã lưu</div>
+                {drafts.map((draft) => (
+                  <div
+                    key={draft.id}
+                    className="draft-item"
+                    onClick={() => loadDraft(draft)}
+                  >
+                    <div className="draft-info">
+                      <div className="draft-name">{draft.name}</div>
+                      <div className="draft-meta">
+                        {formatDate(draft.lastModified)} •{" "}
+                        {draft.sentences?.length || 0} câu
+                      </div>
+                    </div>
+                    <button
+                      className="draft-delete"
+                      onClick={(e) => deleteDraft(draft.id, e)}
+                    >
+                      🗑️ Xóa
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {isLoading && (
               <div className="loading">
@@ -1264,12 +1553,19 @@
               </>
             )}
 
-            {!isLoading && !sentences.length && !file && (
-              <div className="empty-state">
-                <div className="empty-state-icon">📄</div>
-                <h2>Chưa có dữ liệu</h2>
-                <p>Vui lòng tải lên file JSON để bắt đầu chỉnh sửa</p>
-              </div>
+            {!isLoading &&
+              !sentences.length &&
+              !file &&
+              drafts.length === 0 && (
+                <div className="empty-state">
+                  <div className="empty-state-icon">📄</div>
+                  <h2>Chưa có dữ liệu</h2>
+                  <p>Vui lòng tải lên file JSON để bắt đầu chỉnh sửa</p>
+                </div>
+              )}
+
+            {showAutoSave && (
+              <div className="auto-save-indicator">✓ Đã lưu nháp tự động</div>
             )}
           </div>
         );
