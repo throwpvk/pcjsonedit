@@ -658,6 +658,97 @@
         animation: fadeIn 0.3s ease;
       }
 
+      .btn-delete {
+        padding: 4px 8px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-delete:hover {
+        background: #dc2626;
+      }
+
+      .btn-clear-all-vocabulary {
+        padding: 6px 12px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        margin-bottom: 10px;
+      }
+
+      .btn-clear-all-vocabulary:hover {
+        background: #d97706;
+      }
+
+      .btn-clear-all-grammar {
+        padding: 6px 12px;
+        background: #8b5cf6;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        margin-bottom: 10px;
+      }
+
+      .btn-clear-all-grammar:hover {
+        background: #7c3aed;
+      }
+
+      .undo-redo-controls {
+        display: flex;
+        gap: 8px;
+        margin-left: 10px;
+      }
+
+      .btn-undo,
+      .btn-redo {
+        padding: 8px 14px;
+        background: #63dcf1;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .btn-undo:hover,
+      .btn-redo:hover {
+        background: #39acee;
+        transform: translateY(-1px);
+      }
+
+      .btn-undo:disabled,
+      .btn-redo:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .notes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -837,6 +928,26 @@
           onUpdate({ ...sentence, grammar_notes: newNotes });
         };
 
+        const deleteVocabularyNote = (index) => {
+          const newNotes = [...sentence.vocabulary_notes];
+          newNotes.splice(index, 1);
+          onUpdate({ ...sentence, vocabulary_notes: newNotes });
+        };
+
+        const clearAllVocabularyNotes = () => {
+          onUpdate({ ...sentence, vocabulary_notes: [] });
+        };
+
+        const deleteGrammarNote = (index) => {
+          const newNotes = [...sentence.grammar_notes];
+          newNotes.splice(index, 1);
+          onUpdate({ ...sentence, grammar_notes: newNotes });
+        };
+
+        const clearAllGrammarNotes = () => {
+          onUpdate({ ...sentence, grammar_notes: [] });
+        };
+
         return (
           <div className="card">
             <div className="card-header">
@@ -981,7 +1092,15 @@
                 {sentence.vocabulary_notes &&
                   sentence.vocabulary_notes.length > 0 && (
                     <>
-                      <div className="notes-title">Từ vựng</div>
+                      <div className="notes-header">
+                        <div className="notes-title">Từ vựng</div>
+                        <button
+                          className="btn-clear-all-vocabulary"
+                          onClick={clearAllVocabularyNotes}
+                        >
+                          ✖ Xóa hết tất cả note từ vựng
+                        </button>
+                      </div>
                       <table className="vocabulary-table">
                         <thead>
                           <tr>
@@ -989,6 +1108,7 @@
                             <th>Cách đọc</th>
                             <th>Nghĩa</th>
                             <th>JLPT</th>
+                            <th style={{ width: "60px" }}>Xóa</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1050,6 +1170,15 @@
                                   }
                                 />
                               </td>
+                              <td style={{ textAlign: "center" }}>
+                                <button
+                                  className="btn-delete"
+                                  onClick={() => deleteVocabularyNote(index)}
+                                  title="Xóa từ này"
+                                >
+                                  ✖
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -1061,10 +1190,16 @@
                   sentence.grammar_notes.length > 0 && (
                     <>
                       <div
-                        className="notes-title"
+                        className="notes-header"
                         style={{ marginTop: "20px" }}
                       >
-                        Ngữ pháp
+                        <div className="notes-title">Ngữ pháp</div>
+                        <button
+                          className="btn-clear-all-grammar"
+                          onClick={clearAllGrammarNotes}
+                        >
+                          ✖ Xóa hết tất cả note ngữ pháp
+                        </button>
                       </div>
                       {sentence.grammar_notes.map((note, index) => (
                         <div key={index} className="note-item">
@@ -1126,6 +1261,17 @@
                               }
                             />
                           </div>
+                          <div
+                            style={{ marginTop: "10px", textAlign: "right" }}
+                          >
+                            <button
+                              className="btn-delete"
+                              onClick={() => deleteGrammarNote(index)}
+                              style={{ padding: "6px 12px", fontSize: "13px" }}
+                            >
+                              ✖ Xóa note này
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </>
@@ -1148,11 +1294,36 @@
         const [drafts, setDrafts] = useState([]);
         const [showAutoSave, setShowAutoSave] = useState(false);
         const [currentDraftId, setCurrentDraftId] = useState(null);
+        const [history, setHistory] = useState([]);
+        const [historyIndex, setHistoryIndex] = useState(-1);
 
         // Load drafts khi component mount
         React.useEffect(() => {
           loadDrafts();
         }, []);
+
+        // Lưu vào history khi sentences thay đổi
+        React.useEffect(() => {
+          if (sentences.length > 0) {
+            // Chỉ thêm vào history nếu đây không phải là kết quả của undo/redo
+            if (
+              historyIndex === -1 ||
+              JSON.stringify(sentences) !==
+                JSON.stringify(history[historyIndex])
+            ) {
+              const newHistory = history.slice(0, historyIndex + 1);
+              newHistory.push(JSON.parse(JSON.stringify(sentences)));
+              // Giới hạn history 500 bước
+              if (newHistory.length > 500) {
+                newHistory.shift();
+                setHistoryIndex(newHistory.length - 1);
+              } else {
+                setHistoryIndex(newHistory.length - 1);
+              }
+              setHistory(newHistory);
+            }
+          }
+        }, [sentences]);
 
         // Auto save khi sentences thay đổi
         React.useEffect(() => {
@@ -1344,6 +1515,22 @@
           );
         }, []);
 
+        const handleUndo = useCallback(() => {
+          if (historyIndex > 0) {
+            const newIndex = historyIndex - 1;
+            setHistoryIndex(newIndex);
+            setSentences(JSON.parse(JSON.stringify(history[newIndex])));
+          }
+        }, [historyIndex, history]);
+
+        const handleRedo = useCallback(() => {
+          if (historyIndex < history.length - 1) {
+            const newIndex = historyIndex + 1;
+            setHistoryIndex(newIndex);
+            setSentences(JSON.parse(JSON.stringify(history[newIndex])));
+          }
+        }, [historyIndex, history]);
+
         const applyReadingCorrections = (data) => {
           const correctedData = JSON.parse(JSON.stringify(data)); // Deep clone
 
@@ -1485,7 +1672,7 @@
                       className="draft-delete"
                       onClick={(e) => deleteDraft(draft.id, e)}
                     >
-                      🗑️ Xóa
+                      ✖ Xóa
                     </button>
                   </div>
                 ))}
@@ -1543,9 +1730,29 @@
                       alignItems: "center",
                     }}
                   >
-                    <div>
-                      <strong>Tổng số câu:</strong> {sentences.length} |
-                      <strong> File:</strong> {jsonData?.meta?.title || "N/A"}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <div>
+                        <strong>Tổng số câu:</strong> {sentences.length} |
+                        <strong> File:</strong> {jsonData?.meta?.title || "N/A"}
+                      </div>
+                    </div>
+                    <div className="undo-redo-controls">
+                      <button
+                        className="btn-undo"
+                        onClick={handleUndo}
+                        disabled={historyIndex <= 0}
+                        title="Hoàn tác"
+                      >
+                        ↶
+                      </button>
+                      <button
+                        className="btn-redo"
+                        onClick={handleRedo}
+                        disabled={historyIndex >= history.length - 1}
+                        title="Làm lại"
+                      >
+                        ↷
+                      </button>
                     </div>
                     <button className="btn btn-success" onClick={handleSave}>
                       💾 Lưu file
